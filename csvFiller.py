@@ -2,7 +2,7 @@ import pandas as pd
 import csv
 import numpy as np
 
-df = pd.read_csv('E:\Code Projects\Case Lights\Forza M7\logTelemetry copy.csv')
+df = pd.read_csv('logTelemetry copy.csv')
 
 def createHeaderCSV(file_name):
     data = ["Timestamp", "CarOrdinalID", "CarClass", "CarPerformanceIndex", "DriveTrainType", "NumCylinders", "EngineMaxRPM", "EndingeIdelRPM", "EngineCurrentRPM", "Speed", "Power", "Torque", "Boost", "Gear", "Accel", "Brake", "Clutch", "HandBrake", "Fuel", "roundedCurrentRPM", "roundedPower", "roundedTorque",]
@@ -51,11 +51,11 @@ def gearPullBuilder(numGears):
     while count < numGears:
         gear = count+1
         #Sets file name for each gear in the car
-        fileName = "E:\Code Projects\Case Lights\Forza M7\Gear_" + str(gear) + "_data.csv"
+        fileName = "Gear_" + str(gear) + "_data.csv"
         createHeaderCSV(fileName)
         
         #grabs rows that match the gear supplied
-        matchedRows = read_csv_and_filter('E:\Code Projects\Case Lights\Forza M7\logTelemetry copy.csv', 'Gear', gear)
+        matchedRows = read_csv_and_filter('logTelemetry copy.csv', 'Gear', gear)
         
         #writes row to the matching fiel
         write_to_csv(fileName, matchedRows)
@@ -107,7 +107,7 @@ def generateMissingRPMData(fileName):
     #sorts the array in ascending order based on roundedCurrentRPM
     originalData.sort(key=lambda x: int(x['roundedCurrentRPM']))
 
-    file_name = 'E:\Code Projects\Case Lights\Forza M7\Gear_2_dataFilled.csv'
+    file_name = 'Gear_2_dataFilled.csv'
     createHeaderCSV(file_name)
     write_to_csv(file_name, originalData)
 
@@ -158,5 +158,5 @@ def generateMissingTorqueData(fileName):
 
 
 gearPullBuilder(9)
-generateMissingRPMData("E:\Code Projects\Case Lights\Forza M7\Gear_2_data.csv")
+generateMissingRPMData("Gear_2_data.csv")
 #generateMissingTorqueData("E:\Code Projects\Case Lights\Forza M7\Gear_2_dataFilled.csv")
