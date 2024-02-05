@@ -153,7 +153,7 @@ def generateMissingTorqueData(fileName):
         except:
             break
 
-    write_to_csv('E:\Code Projects\Case Lights\Forza M7\Gear_2_torqueDataFilled.csv', originalData)
+    write_to_csv('Gear_2_torqueDataFilled.csv', originalData)
     print("Torque generation complete")
 
 
