@@ -3,16 +3,10 @@ import os
 from pathlib import Path
 from datetime import datetime
 
-#Defines file path and name
-file_name = "E:\Code Projects\Case Lights\Forza M7\carDb.csv"
-
-# Create a Path object
-file_path_obj = Path(file_name)
-
 #Creates blank table containing header
 def createHeaderCSV():
     data = [
-    ["CarOrdinalID", "CarFriendlyName", "CarMake", "CarModel", "CarManYear", "CarClass", "CarPerformanceIndex", "DriveTrainType", "NumCylinders", "CylinderNumber", "EngineMaxRPM", "EndingeIdelRPM", "Gears", "Ratio1", "Ratio2", "Ratio3", "Ratio4", "Ratio5", "Ratio6", "Ratio7", "Ratio8", "Ratio9", "Ratio10", "LastModified"],
+    ["CarOrdinalID", "CarFriendlyName", "CarMake", "CarModel", "CarManYear", "CarClass", "CarPerformanceIndex", "DriveTrainType", "NumCylinders", "CylinderNumber", "EngineMaxRPM", "EndingeIdelRPM", "Gears", "FinalDriveRatio", "Ratio1", "Ratio2", "Ratio3", "Ratio4", "Ratio5", "Ratio6", "Ratio7", "Ratio8", "Ratio9", "Ratio10", "LastModified"],
     ]
     
     # Writing to the CSV file
@@ -25,7 +19,7 @@ def createHeaderCSV():
         file.close
 
 #CSV writer function to append entry to the table
-def addEntry(CarOrdinalID, CarFriendlyName, CarMake, CarModel, CarManYear, CarClass, CarPerformanceIndex, DriveTrainType, NumCylinders, EngineMaxRPM, EngineIdleRPM, Gears, Ratio1, Ratio2, Ratio3, Ratio4, Ratio5, Ratio6, Ratio7, Ratio8, Ratio9, Ratio10):
+def addEntry(CarOrdinalID, CarFriendlyName, CarMake, CarModel, CarManYear, CarClass, CarPerformanceIndex, DriveTrainType, NumCylinders, EngineMaxRPM, EngineIdleRPM, Gears, FinalDriveRatio, Ratio1, Ratio2, Ratio3, Ratio4, Ratio5, Ratio6, Ratio7, Ratio8, Ratio9, Ratio10):
     data = [
         CarOrdinalID,
         CarFriendlyName,
@@ -39,6 +33,7 @@ def addEntry(CarOrdinalID, CarFriendlyName, CarMake, CarModel, CarManYear, CarCl
         EngineMaxRPM,
         EngineIdleRPM,
         Gears,
+        FinalDriveRatio,
         Ratio1,
         Ratio2,
         Ratio3,
@@ -62,7 +57,7 @@ def addEntry(CarOrdinalID, CarFriendlyName, CarMake, CarModel, CarManYear, CarCl
         file.close
 
 #CSV writer function to append entry to the table
-def overwriteEntry(Row, CarOrdinalID, CarFriendlyName, CarMake, CarModel, CarManYear, CarClass, CarPerformanceIndex, DriveTrainType, NumCylinders, EngineMaxRPM, EngineIdleRPM, Gears, Ratio1, Ratio2, Ratio3, Ratio4, Ratio5, Ratio6, Ratio7, Ratio8, Ratio9, Ratio10):
+def overwriteEntry(Row, CarOrdinalID, CarFriendlyName, CarMake, CarModel, CarManYear, CarClass, CarPerformanceIndex, DriveTrainType, NumCylinders, EngineMaxRPM, EngineIdleRPM, Gears, FinalDriveRatio, Ratio1, Ratio2, Ratio3, Ratio4, Ratio5, Ratio6, Ratio7, Ratio8, Ratio9, Ratio10):
     data = [
         CarOrdinalID,
         CarFriendlyName,
@@ -76,6 +71,7 @@ def overwriteEntry(Row, CarOrdinalID, CarFriendlyName, CarMake, CarModel, CarMan
         EngineMaxRPM,
         EngineIdleRPM,
         Gears,
+        FinalDriveRatio,
         Ratio1,
         Ratio2,
         Ratio3,
@@ -146,29 +142,42 @@ def count_rows_in_csv(file_path):
         file.close
     return row_count
 
-#defines car attributes
-CarOrdinalID = "2352"
-CarFriendlyName = "Acura NSX"
-CarMake = "Acura"
-CarModel = "NSX"
-CarManYear = "2017"
-CarClass = "6" #Between 0 (D – worst cars) and 7 (X class – best cars) inclusive
-CarPerformanceIndex = "836" #Between 100 (worst car) and 999 (best car) inclusive
+
+
+'''Main class to add cars to the database is here'''
+#defines car attributes set to "null" if unknown or are looking to fill later
+#gear ratio data must be consumed by human eye, from the tuning screens, as this is not provided by the data out
+#if unable any values for ID/name/model/make/year use https://forums.forza.net/t/car-ordinal-list-for-forza-motorsport/649188 to reference their list
+
+CarOrdinalID = "323" #Primary key of the table but can be found in telemetry captures
+CarFriendlyName = "Lancia Delta"
+CarMake = "Lancia"
+CarModel = "Delta HF Integrale EVO"
+CarManYear = "1992"
+CarClass = "1" #Between 0 (D – worst cars) and 7 (X class – best cars) inclusive
+CarPerformanceIndex = "351" #Between 100 (worst car) and 999 (best car) inclusive
 DriveTrainType = "2" #0 = FWD, 1 = RWD, 2 = AWD
-NumCylinders = "6"
+NumCylinders = "4"
 EngineMaxRPM = "9000"
 EngineIdleRPM = "800"
-Gears = "9"
-Ratio1 = "3.84"
-Ratio2 = "2.43"
-Ratio3 = "1.78"
-Ratio4 = "1.43" 
-Ratio5 = "1.21"
-Ratio6 = "1.04"
-Ratio7 = ".88"
-Ratio8 = ".75"
-Ratio9 = ".63"
+Gears = "5"
+FinalDriveRatio = "null"
+Ratio1 = "null"
+Ratio2 = "null"
+Ratio3 = "null"
+Ratio4 = "null" 
+Ratio5 = "null"
+Ratio6 = "null"
+Ratio7 = "null"
+Ratio8 = "null"
+Ratio9 = "null"
 Ratio10 = "null"
+
+#Defines file path and name
+file_name = "carDb.csv"
+
+# Create a Path object
+file_path_obj = Path(file_name)
 
 if file_path_obj.is_file():
     print(f'The file "{file_name}" exists.')
@@ -180,7 +189,7 @@ if file_path_obj.is_file():
     result = search_csv(file_name, search_term)
 
     if result:
-        print(f'Match found for ordinal# '+str(CarOrdinalID)+' in row# ' + str(result))
+        print(f'Match found for CarOrdinalID: '+str(CarOrdinalID)+' in row# ' + str(result))
         #find line item and grab timestamp
         resultLastModified = get_value_from_csv(file_name, result)
 
@@ -189,20 +198,23 @@ if file_path_obj.is_file():
             #Should add a line comparison to ensure there are updates required but skipping for now
             
             #Overwrite entry in the table
-            overwriteEntry(result, CarOrdinalID, CarFriendlyName, CarMake, CarModel, CarManYear, CarClass, CarPerformanceIndex, DriveTrainType, NumCylinders, EngineMaxRPM, EngineIdleRPM, Gears, Ratio1, Ratio2, Ratio3, Ratio4, Ratio5, Ratio6, Ratio7, Ratio8, Ratio9, Ratio10)
+            overwriteEntry(result, CarOrdinalID, CarFriendlyName, CarMake, CarModel, CarManYear, CarClass, CarPerformanceIndex, DriveTrainType, NumCylinders, EngineMaxRPM, EngineIdleRPM, Gears, FinalDriveRatio, Ratio1, Ratio2, Ratio3, Ratio4, Ratio5, Ratio6, Ratio7, Ratio8, Ratio9, Ratio10)
             print("Line #" + str(result) + " updated based on outdated timestamp")
     else:
-        print(f'No match found for {"CarOrdinalID" + str(search_term)}.')
+        print(f'No match found for {"CarOrdinalID: " + str(search_term)}.')
 
         #Adds entry to the table on the next available row
-        addEntry(CarOrdinalID, CarFriendlyName, CarMake, CarModel, CarManYear, CarClass, CarPerformanceIndex, DriveTrainType, NumCylinders, EngineMaxRPM, EngineIdleRPM, Gears, Ratio1, Ratio2, Ratio3, Ratio4, Ratio5, Ratio6, Ratio7, Ratio8, Ratio9, Ratio10)
+        addEntry(CarOrdinalID, CarFriendlyName, CarMake, CarModel, CarManYear, CarClass, CarPerformanceIndex, DriveTrainType, NumCylinders, EngineMaxRPM, EngineIdleRPM, Gears, FinalDriveRatio, Ratio1, Ratio2, Ratio3, Ratio4, Ratio5, Ratio6, Ratio7, Ratio8, Ratio9, Ratio10)
+
+        print(f'{"CarOrdinalID: " + str(search_term)} added to the database.')
 else:
     print(f'The file "{file_name}" does not exist.')
     
     #runs method to create file and place headers
     createHeaderCSV()
-    print("File created with headers")
+    print("Database created with header information filled")
 
     #runs method to add provided data to the first row of the table
-    addEntry(CarOrdinalID, CarFriendlyName, CarMake, CarModel, CarManYear, CarClass, CarPerformanceIndex, DriveTrainType, NumCylinders, EngineMaxRPM, EngineIdleRPM, Gears, Ratio1, Ratio2, Ratio3, Ratio4, Ratio5, Ratio6, Ratio7, Ratio8, Ratio9, Ratio10)
-    print("Line filled")
+    addEntry(CarOrdinalID, CarFriendlyName, CarMake, CarModel, CarManYear, CarClass, CarPerformanceIndex, DriveTrainType, NumCylinders, EngineMaxRPM, EngineIdleRPM, Gears, FinalDriveRatio, Ratio1, Ratio2, Ratio3, Ratio4, Ratio5, Ratio6, Ratio7, Ratio8, Ratio9, Ratio10)
+
+    print("CarOrdinalID " + str(CarOrdinalID) + " added to the database.")
