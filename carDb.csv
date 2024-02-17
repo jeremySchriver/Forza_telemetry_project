@@ -1,2 +1,3 @@
-CarOrdinalID,CarFriendlyName,CarMake,CarModel,CarManYear,CarClass,CarPerformanceIndex,DriveTrainType,NumCylinders,CylinderNumber,EngineMaxRPM,EndingeIdelRPM,Gears,Ratio1,Ratio2,Ratio3,Ratio4,Ratio5,Ratio6,Ratio7,Ratio8,Ratio9,Ratio10,LastModified
-2352,Acura NSX,Acura,NSX,2017,6,836,2,6,9000,800,9,3.84,2.43,1.78,1.43,1.21,1.04,.88,.75,.63,null,2024-01-24 20:01:42.521333
+CarOrdinalID,CarFriendlyName,CarMake,CarModel,CarManYear,CarClass,CarPerformanceIndex,DriveTrainType,NumCylinders,CylinderNumber,EngineMaxRPM,EndingeIdelRPM,Gears,FinalDriveRatio,Ratio1,Ratio2,Ratio3,Ratio4,Ratio5,Ratio6,Ratio7,Ratio8,Ratio9,Ratio10,LastModified
+323,Lancia Delta,Lancia,Delta HF Integrale EVO,1992,1,351,2,4,9000,800,5,null,null,null,null,null,null,null,null,null,null,null,2024-02-16 17:27:59.196077
+2352,Acura NSX,Acura,NSX,2017,6,836,2,6,9000,800,9,null,3.84,2.43,1.78,1.43,1.21,1.04,.88,.75,.63,null,2024-01-24 20:01:42.521333
