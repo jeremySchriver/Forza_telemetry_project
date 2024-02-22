@@ -1,0 +1,8 @@
+{
+    "GameVersion": "dash_fm8",
+    "Forza_UDP_IP": "127.0.0.1",
+    "Forza_UDP_PORT": 8000,
+    "OpenRBG_IP": "127.0.0.1", 
+    "OpenRBG_PORT": 6742, 
+    "OpenRBG_ClientName": "My client!"
+}
