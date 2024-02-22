@@ -700,7 +700,7 @@ def processDataForRPMVsSpeed(carOrdinalID, numGears):
 '''Start main block to trigger methods and menu system'''
 
 #Define variables
-captureFile = os.path.join('TelemDataFiles','logTelemetry2.csv')
+captureFile = os.path.join('TelemDataFiles','logTelemetry.csv')
 numGears = 7
 carOrdinalID = 3655 #Used to build files unique to the car
 
