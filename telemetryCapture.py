@@ -1,11 +1,12 @@
 import socket
 from struct import unpack
-#import data_packet
 from datetime import datetime
 import csv
 import os
 from Core.data_packet import DataPacket
 import json
+import pandas as pd
+from DBModule.carDBmgmt import createTelemDataFileDirectoryForCar
 
 '''Class is meant to be used as the main telemetry capture method. It is required to have launched the game before starting this script or it may error out. Once the game is launched and default variables within the script have been updated (if required) you can launch this script. Current version has no built in kill switch other than keyboard interrupt within the terminal.'''
 
@@ -37,7 +38,7 @@ def createHeaderCSV(fileName):
 fileName = os.getcwd() + "\\TelemDataFiles\\logTelemetry.csv"
 
 file_path = os.path.join(os.getcwd(), "Core", "preferences.json")
-
+prefError = "false"
 if os.path.exists(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
         try:
@@ -52,35 +53,105 @@ if os.path.exists(file_path):
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.bind((UDP_IP, UDP_PORT))
 
-            #Initializes DataPacket module for parsing data from FM7
-            dp = DataPacket(version=gameVersion)
-
-            #Runs the method to create the file with headers, if file is missing
-            createHeaderCSV(fileName)
-
-            #Main loop that continues to run until script is terminated. Once UI is built while check will be changed to match a boolean there.
-            while True:
-                data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
-                
-                #Parses the recieved data packet using the data_packet class
-                dp.parse(data, recording = False) #Terminal output for "Packet Parsed" comes from this method
-                
-                if dp.active==1:
-                    #Sets values captured from the data packed into an array        
-                    data = [str(datetime.now()), str(dp.car_ordinal_id), str(dp.car_class_id), str(dp.car_performance_index), str(dp.car_drivetrain_id), str(dp.car_num_cylinders), str(dp.engine_max_rpm), str(dp.engine_idle_rpm), str(dp.engine_current_rpm), str(dp.speed), str(dp.power), str(dp.torque), str(dp.boost), str(dp.gear_num), str(dp.throttle), str(dp.brake), str(dp.clutch), str(dp.handbrake), str(dp.fuel)]
-
-                    #Writes data to csv file
-                    with open(fileName, mode='a', newline='') as file:
-                        writer = csv.writer(file)
-                        
-                        #Write the data to the next available row
-                        writer.writerow(data)
-
-                        file.close
-            else:
-                print("Loop Ended")
-
         except json.JSONDecodeError as e:
             print("Error decoding JSON:", e)
+            prefError = "true"
+    f.close()
+    if prefError != "true":
+        #Initializes DataPacket module for parsing data from FM7
+        dp = DataPacket(version=gameVersion)
+
+        #Sets methods for checking to ensure file exists before asking archiving and cleaning questions
+        if os.path.exists(fileName):
+            next_question = input("Would you like to archive the previous log file?")
+            if next_question.lower() == "yes" or next_question.lower() == "y":
+                next_question = input("Did you analyze the data already?")
+                if next_question.lower() == "yes" or next_question.lower() == "y":
+                    captureFile = os.getcwd() + '\\TelemDataFiles\\logTelemetry2.csv'
+                    df = pd.read_csv(captureFile)
+
+                    #Checks df for a carID within the file to use !!Warning this will break if more than one carID is present in the log file!!
+                    if df['CarOrdinalID'].max() != None:
+                        carOrdinalID = df['CarOrdinalID'].max()
+                    else:
+                        carOrdinalID = input("What is the carOrdinalID for the car?")
+
+                    next_question = input("Did you want to rename the file? Note: New file name would already be named " + str(carOrdinalID) + "_logTelemetry.csv and would be placed in its respective TelemDataFiles directory")
+                    if next_question.lower() == "yes" or next_question.lower() == "y":
+                        newName = input("New name of the file? Note: .csv will be added if not included here")
+                        if newName[-4:] != ".csv":
+                            newName += ".csv"
+                            path = os.getcwd() + '\\TelemDataFiles\\' + str(carOrdinalID) + "\\"
+                            name = str(carOrdinalID) + "_" + newName
+                            df.to_csv(path + name, index=False)
+                    else:
+                        path = os.getcwd() + '\\TelemDataFiles\\' + str(carOrdinalID) + "\\"
+                        name = str(carOrdinalID) + "_logTelemetry.csv"
+                        df.to_csv(path + name, index=False)
+                else:
+                    captureFile = os.getcwd() + '\\TelemDataFiles\\logTelemetry2.csv'
+                    df = pd.read_csv(captureFile)
+
+                    #Checks df for a carID within the file to use !!Warning this will break if more than one carID is present in the log file!!
+                    if df['CarOrdinalID'].max() != None:
+                        carOrdinalID = df['CarOrdinalID'].max()
+                        print(carOrdinalID)
+                    else:
+                        carOrdinalID = input("What is the carOrdinalID for the car?")
+                    createTelemDataFileDirectoryForCar(carOrdinalID)
+
+                    next_question = input("Did you want to rename the file? Note: New file name would already be named " + str(carOrdinalID) + "_logTelemetry.csv and would be placed in its respective TelemDataFiles directory")
+                    if next_question.lower() == "yes" or next_question.lower() == "y":
+                        newName = input("New name of the file? Note: .csv will be added if not included here")
+                        if newName[-4:] != ".csv":
+                            newName += ".csv"
+                            path = os.getcwd() + '\\TelemDataFiles\\' + str(carOrdinalID) + "\\"
+                            name = str(carOrdinalID) + "_" + newName
+                            df.to_csv(path + name, index=False)
+                    else:
+                        path = os.getcwd() + '\\TelemDataFiles\\' + str(carOrdinalID) + "\\"
+                        name = str(carOrdinalID) + "_logTelemetry.csv"
+                        df.to_csv(path + name, index=False)
+            else:
+                print("Continuing and will append to existing file if it exists")
+
+            print("It is recommended you clean the log file before proceeding, unless this is the same car and has the same performance index.")
+            next_question = input("Would you like to clean the log?")
+
+            if next_question.lower() == "yes" or next_question.lower() == "y":
+                if os.path.exists(fileName):
+                    os.remove(fileName)
+                    print(f"File '{fileName}' deleted successfully.")
+                else:
+                    print(f"File '{fileName}' does not exist.")
+            else:
+                print("Continuing and will append to existing file if it exists")
+
+        #Runs the method to create the file with headers, if file is missing
+        createHeaderCSV(fileName)
+
+        #Main loop that continues to run until script is terminated. Once UI is built while check will be changed to match a boolean there.
+        while True:
+            data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
+            
+            #Parses the recieved data packet using the data_packet class
+            dp.parse(data, recording = False) #Terminal output for "Packet Parsed" comes from this method
+            
+            if dp.active==1:
+                #Sets values captured from the data packed into an array        
+                data = [str(datetime.now()), str(dp.car_ordinal_id), str(dp.car_class_id), str(dp.car_performance_index), str(dp.car_drivetrain_id), str(dp.car_num_cylinders), str(dp.engine_max_rpm), str(dp.engine_idle_rpm), str(dp.engine_current_rpm), str(dp.speed), str(dp.power), str(dp.torque), str(dp.boost), str(dp.gear_num), str(dp.throttle), str(dp.brake), str(dp.clutch), str(dp.handbrake), str(dp.fuel)]
+
+                #Writes data to csv file
+                with open(fileName, mode='a', newline='') as file:
+                    writer = csv.writer(file)
+                    
+                    #Write the data to the next available row
+                    writer.writerow(data)
+
+                    file.close
+        else:
+            print("Loop Ended")
+    else:
+        print("Error occurred")
 else:
     print("File not found:", file_path)

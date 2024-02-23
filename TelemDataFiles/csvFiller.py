@@ -6,6 +6,8 @@ import time
 import matplotlib.pyplot as plt
 from scipy import stats
 from scipy.optimize import curve_fit
+from sklearn.ensemble import IsolationForest
+from shapely.geometry import LineString
 
 '''Class intended for dyno use. Since FM8 currently has no Dyno option it can be difficult to build power curves for you car. This class is meant to be run on a captured data set from a live race/practice. Run through your normal race and let the telemetryCapture class build your csv file. Ensure your file name in this class matches the capture file before starting the chain of modifications.'''
 
@@ -137,6 +139,7 @@ def deletePreviousData(numGears,carOrdinalID):
         file_path6 = os.getcwd() + "\\TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_TorquePerGearOverSpeed.png"
         file_path7 = os.getcwd() + "\\TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_TorquePerGearOverSpeed_wIntersections.png"
         file_path8 = os.getcwd() + "\\TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_RPMvSpeed.png"
+        file_path9 = os.getcwd() + "\\TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(count) + "_PowerAndTorqueCurve_Poly.png"
         
         if os.path.exists(file_path):
             os.remove(file_path)
@@ -192,6 +195,12 @@ def deletePreviousData(numGears,carOrdinalID):
         else:
             print(f"File '{file_path8}' does not exist.")
 
+        if os.path.exists(file_path9):
+            os.remove(file_path9)
+            print(f"File '{file_path9}' deleted successfully.")
+        else:
+            print(f"File '{file_path9}' does not exist.")
+
         count = count + 1
 
 #Method to build the torque and power v RPM curve files
@@ -221,9 +230,9 @@ def powerCurvePlotter(fileName, EngineMaxRPM, currentGear, carOrdinalID):
     # Plot the original data and the fitted quadratic curve
     plt.figure()
 
-    '''Used for showing corrected values against normalized scatter data
+    '''Used for showing corrected values against normalized scatter data'''
     plt.scatter(sorted_zeroRemoved_combined_dataframe['roundedCurrentRPM'], y_data, label='Torque', color= 'orange')
-    plt.scatter(sorted_zeroRemoved_combined_dataframe['roundedCurrentRPM'], y2_data, label='Power', color= 'blue')'''
+    #plt.scatter(sorted_zeroRemoved_combined_dataframe['roundedCurrentRPM'], y2_data, label='Power', color= 'blue')
 
     plt.plot(sorted_zeroRemoved_combined_dataframe['roundedCurrentRPM'], quadratic_func(sorted_zeroRemoved_combined_dataframe['roundedCurrentRPM'], *popt), label='Quadratic fit torque curve', color= 'red')
     plt.plot(sorted_zeroRemoved_combined_dataframe['roundedCurrentRPM'], quadratic_func(sorted_zeroRemoved_combined_dataframe['roundedCurrentRPM'], *popt2), label='Quadratic fit power curve', color= 'green')
@@ -262,6 +271,159 @@ def powerCurvePlotter(fileName, EngineMaxRPM, currentGear, carOrdinalID):
 
     #Saves the image to a png file
     plt.savefig("TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(currentGear) + "_PowerAndTorqueCurve.png", bbox_inches='tight')
+
+#New method to build the torque and power vs RPM curve files. New method uses polynomial curving and a different run book of data normalization before plotting
+def altPowerCurvePlotter(carOrdinalID, numGears):
+    a = {}
+    count = 1
+    while count <= numGears:
+        key = "df" + str(count)
+        path = 'TelemDataFiles\\' + str(carOrdinalID) + "\\" + str(carOrdinalID) + '_Gear_' + str(count) + '_data.csv'
+        value = pd.read_csv(path)
+
+        a[key] = value
+        count += 1
+
+    #Rounds all the RPM data, in each dataframe, to the nearest 50 rpm value
+    count = 1
+    while count <= numGears:
+        key = "df" + str(count)
+        newKey = "roundedDf" + str(count)
+
+        cf = a[key]
+        cf['roundedCurrentRPM'] = np.round(cf['roundedCurrentRPM'] / 50) * 50
+
+        a[newKey] = cf
+        count += 1
+
+    #Groups all RPM data, in each dataframe, and determines the maximum value in each column
+    count = 1
+    while count <= numGears:
+        key = "roundedDf" + str(count)
+        newKey = "roundedGroupedDf" + str(count)
+
+        cf = a[key]
+        value = cf.groupby('roundedCurrentRPM').max().reset_index()
+
+        a[newKey] = value
+        count += 1
+
+    #Sorts all the data frames by the roundedCurrentRPM and pushes them into a new frame
+    count = 1
+    while count <= numGears:
+        key = "roundedGroupedDf" + str(count)
+        newKey = "roundedGroupedSortedDf" + str(count)
+
+        value = a[key].sort_values(by=['roundedCurrentRPM'],ascending=True)
+
+        a[newKey] = value
+        count += 1
+
+    #Removes rows from the data frame which have a 0 torque value
+    count = 1
+    while count <= numGears:
+        key = "roundedGroupedSortedDf" + str(count)
+        newKey = "roundedGroupedSortedZeroDroppedDf" + str(count)
+
+        value = a[key][a[key]['roundedTorque'] != 0]
+
+        a[newKey] = value
+        count += 1
+
+    #Method to run isolation forest on the provided data set to remove outliers from the set
+    def remove_outliers_isolation_forest(df, column_name, contamination=0.05):
+        # Extract the column data
+        column_data = df[column_name].values.reshape(-1, 1)
+        
+        # Fit the Isolation Forest model
+        clf = IsolationForest(contamination=contamination)
+        clf.fit(column_data)
+        
+        # Identify outliers
+        outliers = clf.predict(column_data) == -1
+        
+        # Remove outliers from the DataFrame
+        df_clean = df[~outliers]
+        
+        return df_clean
+
+    #Runs the outliers method above to correct data and push into a new frame
+    count = 1
+    while count <= numGears:
+        key = "roundedGroupedSortedZeroDroppedDf" + str(count)
+        newKey = "cleanedDf" + str(count)
+
+        value = remove_outliers_isolation_forest(a[key], 'roundedTorque', contamination=0.1)
+
+        a[newKey] = value
+        count += 1
+
+    #Builds power curve plots based polynomial curving
+    count = 1
+    while count <= numGears:
+        key = "cleanedDf" + str(count)
+
+        # Fit a polynomial curve for torque (adjust the degree as needed)
+        degree_torque = 2
+        coefficients_torque = np.polyfit(a[key]['roundedCurrentRPM'], a[key]['roundedTorque'], degree_torque)
+        polynomial_torque = np.poly1d(coefficients_torque)
+
+        # Generate y values for the torque curve fit
+        x_values_torque = np.linspace(min(a[key]['roundedCurrentRPM']), max(a[key]['roundedCurrentRPM']), 100)
+        y_values_torque = polynomial_torque(x_values_torque)
+
+        # Find max torque and its corresponding RPM
+        max_torque_index = np.argmax(y_values_torque)
+        max_torque_RPM = x_values_torque[max_torque_index]
+        max_torque_value = y_values_torque[max_torque_index]
+
+        # Fit a polynomial curve for power (adjust the degree as needed)
+        degree_power = 2
+        coefficients_power = np.polyfit(a[key]['roundedCurrentRPM'], a[key]['roundedPower'], degree_power)
+        polynomial_power = np.poly1d(coefficients_power)
+
+        # Generate y values for the power curve fit
+        x_values_power = np.linspace(min(a[key]['roundedCurrentRPM']), max(a[key]['roundedCurrentRPM']), 100)
+        y_values_power = polynomial_power(x_values_power)
+
+        # Find max power and its corresponding RPM
+        max_power_index = np.argmax(y_values_power)
+        max_power_RPM = x_values_power[max_power_index]
+        max_power_value = y_values_power[max_power_index]
+
+        # Plot the data and the curve fits
+        plt.figure(figsize=(10, 6))
+
+        #Plots normalized data in a scatter plot format to ensure the curve is close to intended dataset
+        plt.scatter(a[key]['roundedCurrentRPM'], a[key]['roundedTorque'], label='Data Points', color='blue')
+        plt.scatter(a[key]['roundedCurrentRPM'], a[key]['roundedPower'], label='Power vs RPM plot', color='orange')
+
+        #Plots 
+        plt.plot(x_values_torque, y_values_torque, color='red', label=f'Torque Polynomial Fit (Degree {degree_torque})')
+        plt.plot(x_values_power, y_values_power, color='green', label=f'Power Polynomial Fit (Degree {degree_power})')
+
+        # Annotate max torque and power points
+        plt.annotate(f'Max Torque: {max_torque_value:.2f} at {max_torque_RPM:.2f} RPM',
+                    xy=(max_torque_RPM, max_torque_value), xytext=(-50, 30),
+                    textcoords='offset points', ha='center', va='center',
+                    arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.5'), fontsize=10, color='red')
+        plt.annotate(f'Max Power: {max_power_value:.2f} at {max_power_RPM:.2f} RPM',
+                    xy=(max_power_RPM, max_power_value), xytext=(-50, -30),
+                    textcoords='offset points', ha='center', va='center',
+                    arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.5'), fontsize=10, color='green')
+
+        # Set labels and title for the chart
+        plt.xlabel('Engine RPM\'s (Rotations Per Minute)')
+        plt.ylabel('Torque (ft lbs)/Power (Horsepower)')
+        plt.title('Torque and Horsepower Band For Gear ' + str(count))
+        plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
+        plt.grid(True)
+
+        # Save the plot
+        plt.savefig("TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(count) + "_PowerAndTorqueCurve_Poly.png", bbox_inches='tight')
+        plt.clf()  # Clear the plot for the next iteration
+
+        count += 1
 
 #Method to build the Torque vs Speed curve file
 def processDataForTorqueVsSpeed(carOrdinalID, numGears):
@@ -700,17 +862,26 @@ def processDataForRPMVsSpeed(carOrdinalID, numGears):
 '''Start main block to trigger methods and menu system'''
 
 #Define variables
-captureFile = os.path.join('TelemDataFiles','logTelemetry.csv')
-numGears = 7
-carOrdinalID = 3655 #Used to build files unique to the car
-
+captureFile = os.getcwd() + '\\TelemDataFiles\\logTelemetry2.csv'
+df = pd.read_csv(captureFile)
 gearCounter = 1
 
-#Sets the telem data file into a pandas dataframe
-df = pd.read_csv(captureFile)
+#Checks df for a carID within the file to use !!Warning this will break if more than one carID is present in the log file!!
+if df['CarOrdinalID'].max() != None:
+    carOrdinalID = df['CarOrdinalID'].max()
+    print(carOrdinalID)
+else:
+    carOrdinalID = input("What is the carOrdinalID for the car?")
+if df['Gear'].max() != None:
+    numGears = df['Gear'].max()
+    print(numGears)
+else:
+    numGears = input("How many gears does the car have?")
+#numGears = 7
+#carOrdinalID = 3655 #Used to build files unique to the car
 
 #Add pause for user input y/delete files previously generated by this class n/continue with warning data may be skewed
-user_input = input("Is this the same car as last run?")
+user_input = input("Have you ever generated telem data for this car?")
 
 if user_input.lower() == "yes" or user_input.lower() == "y" or user_input.lower() == "ys":
     next_input = input("Have you made any performance or tuning updates to the car since the last run?")
@@ -720,7 +891,7 @@ if user_input.lower() == "yes" or user_input.lower() == "y" or user_input.lower(
         next_input = input("Please confirm that you would like to delete previous data.")
         
         if next_input.lower() == "yes" or next_input.lower() == "y" or next_input.lower() == "ys":
-            #placeholder for deleting old files before continuing
+            #delete old files before continuing
             print("Starting process for deleting old data files.")
             deletePreviousData(numGears, carOrdinalID)
             time.sleep(5)
@@ -736,28 +907,54 @@ if user_input.lower() == "yes" or user_input.lower() == "y" or user_input.lower(
                 powerCurvePlotter(fileName, df.EngineMaxRPM.max(), gearCounter, carOrdinalID)
                 gearCounter = gearCounter + 1
             
+            altPowerCurvePlotter(carOrdinalID, numGears)
             processDataForTorqueVsSpeed(carOrdinalID, numGears)
             processDataForRPMVsSpeed(carOrdinalID, numGears)
         elif next_input.lower() == "no" or next_input.lower() == "n":
-            #continue into process
-            print("Continuing process since user opted to not delete previous data.")
+            print("It's recommended that you wipe previously existing data before running this process or data may become skewed, unless its the same car with the same performance index.")
+            next_input = input("Please confirm that you would like to delete previous data.")
 
-            #Build files for each gear
-            gearPullBuilder(numGears,captureFile,carOrdinalID)
+            if next_input.lower() == "yes" or next_input.lower() == "y" or next_input.lower() == "ys":
+                #delete old files before continuing
+                print("Starting process for deleting old data files.")
+                deletePreviousData(numGears, carOrdinalID)
+                time.sleep(5)
 
-            #itterates through the created gear files to build new copies with normalized and sorted data
-            while gearCounter <= numGears:
-                #fileName = "TelemDataFiles\Gear_" + str(gearCounter) + "_data.csv"
-                fileName = "TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(gearCounter) + "_data.csv"
-                duplicateRPMNormalizer(fileName, gearCounter, carOrdinalID)
-                powerCurvePlotter(fileName, df.EngineMaxRPM.max(), gearCounter, carOrdinalID)
-                gearCounter = gearCounter + 1
+                #Build files for each gear
+                gearPullBuilder(numGears, captureFile, carOrdinalID)
 
-            processDataForTorqueVsSpeed(carOrdinalID, numGears)
-            processDataForRPMVsSpeed(carOrdinalID, numGears)
+                #itterates through the created gear files to build new copies with normalized and sorted data
+                while gearCounter <= numGears:
+                    #fileName = "TelemDataFiles\Gear_" + str(gearCounter) + "_data.csv"
+                    fileName = "TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(gearCounter) + "_data.csv"
+                    duplicateRPMNormalizer(fileName, gearCounter,carOrdinalID)
+                    powerCurvePlotter(fileName, df.EngineMaxRPM.max(), gearCounter, carOrdinalID)
+                    gearCounter = gearCounter + 1
+                
+                altPowerCurvePlotter(carOrdinalID, numGears)
+                processDataForTorqueVsSpeed(carOrdinalID, numGears)
+                processDataForRPMVsSpeed(carOrdinalID, numGears)
+            elif next_input.lower() == "no" or next_input.lower() == "n":
+                #continue into process
+                print("Continuing process since user opted to not delete previous data. This behavior is still untested and may cause eratic file behaviors")
+
+                #Build files for each gear
+                gearPullBuilder(numGears,captureFile,carOrdinalID)
+
+                #itterates through the created gear files to build new copies with normalized and sorted data
+                while gearCounter <= numGears:
+                    #fileName = "TelemDataFiles\Gear_" + str(gearCounter) + "_data.csv"
+                    fileName = "TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(gearCounter) + "_data.csv"
+                    duplicateRPMNormalizer(fileName, gearCounter, carOrdinalID)
+                    powerCurvePlotter(fileName, df.EngineMaxRPM.max(), gearCounter, carOrdinalID)
+                    gearCounter = gearCounter + 1
+
+                altPowerCurvePlotter(carOrdinalID, numGears)
+                processDataForTorqueVsSpeed(carOrdinalID, numGears)
+                processDataForRPMVsSpeed(carOrdinalID, numGears)
     elif next_input.lower() == "no" or next_input.lower() == "n":
         #continue into process
-        print("Continuing process since car and performance index are the same.")
+        print("Continuing process since car and performance index are the same. This behavior is still untested and may cause eratic file behaviors")
 
         #Build files for each gear
         gearPullBuilder(numGears, captureFile, carOrdinalID)
@@ -770,50 +967,27 @@ if user_input.lower() == "yes" or user_input.lower() == "y" or user_input.lower(
             powerCurvePlotter(fileName, df.EngineMaxRPM.max(), gearCounter, carOrdinalID)
             gearCounter = gearCounter + 1
 
+        altPowerCurvePlotter(carOrdinalID, numGears)
         processDataForTorqueVsSpeed(carOrdinalID, numGears)
         processDataForRPMVsSpeed(carOrdinalID, numGears)
     else:
         print("Invalid input.")
         #break
 elif user_input.lower() == "no" or user_input.lower() == "n":
-    print("It's recommended that you wipe previously existing data before running this process or data may become skewed, unless its the same car with the same performance index.")
-    next_input = input("Please confirm that you would like to delete previous data.")
+    print("Continuing process since this car has yet to be analyzed")
+    #Build files for each gear
+    gearPullBuilder(numGears, captureFile, carOrdinalID)
 
-    if next_input.lower() == "yes" or next_input.lower() == "y" or next_input.lower() == "ys":
-            #placeholder for deleting old files before continuing
-            print("Starting process for deleting old data files.")
-            deletePreviousData(numGears, carOrdinalID)
-            time.sleep(5)
+    #itterates through the created gear files to build new copies with normalized and sorted data
+    while gearCounter <= numGears:
+        #fileName = "TelemDataFiles\Gear_" + str(gearCounter) + "_data.csv"
+        fileName = "TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(gearCounter) + "_data.csv"
+        duplicateRPMNormalizer(fileName, gearCounter, carOrdinalID)
+        powerCurvePlotter(fileName, df.EngineMaxRPM.max(), gearCounter, carOrdinalID)
+        gearCounter = gearCounter + 1
 
-            #Build files for each gear
-            gearPullBuilder(numGears, captureFile, carOrdinalID)
-
-            #itterates through the created gear files to build new copies with normalized and sorted data
-            while gearCounter <= numGears:
-                #fileName = "TelemDataFiles\Gear_" + str(gearCounter) + "_data.csv"
-                fileName = "TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(gearCounter) + "_data.csv"
-                duplicateRPMNormalizer(fileName, gearCounter, carOrdinalID)
-                powerCurvePlotter(fileName, df.EngineMaxRPM.max(), gearCounter, carOrdinalID)
-                gearCounter = gearCounter + 1
-
-            processDataForTorqueVsSpeed(carOrdinalID, numGears)
-            processDataForRPMVsSpeed(carOrdinalID, numGears)
-    elif next_input.lower() == "no" or next_input.lower() == "n":
-        #continue into process
-        print("Continuing process since car and performance index are the same.")
-
-        #Build files for each gear
-        gearPullBuilder(numGears, captureFile, carOrdinalID)
-
-        #itterates through the created gear files to build new copies with normalized and sorted data
-        while gearCounter <= numGears:
-            #fileName = "TelemDataFiles\Gear_" + str(gearCounter) + "_data.csv"
-            fileName = "TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(gearCounter) + "_data.csv"
-            duplicateRPMNormalizer(fileName, gearCounter, carOrdinalID)
-            powerCurvePlotter(fileName, df.EngineMaxRPM.max(), gearCounter, carOrdinalID)
-            gearCounter = gearCounter + 1
-
-        processDataForTorqueVsSpeed(carOrdinalID, numGears)
-        processDataForRPMVsSpeed(carOrdinalID, numGears)
+    altPowerCurvePlotter(carOrdinalID, numGears)
+    processDataForTorqueVsSpeed(carOrdinalID, numGears)
+    processDataForRPMVsSpeed(carOrdinalID, numGears)
 else:
     print("Invalid input.")
