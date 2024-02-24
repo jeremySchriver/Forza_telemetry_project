@@ -231,7 +231,7 @@ def powerCurvePlotter(fileName, currentGear, carOrdinalID):
     plt.figure()
 
     '''Used for showing corrected values against normalized scatter data'''
-    plt.scatter(sorted_zeroRemoved_combined_dataframe['roundedCurrentRPM'], y_data, label='Torque', color= 'orange')
+    plt.scatter(sorted_zeroRemoved_combined_dataframe['roundedCurrentRPM'], y_data, label='Torque vs RPM plot', color= 'orange')
     #plt.scatter(sorted_zeroRemoved_combined_dataframe['roundedCurrentRPM'], y2_data, label='Power', color= 'blue')
 
     plt.plot(sorted_zeroRemoved_combined_dataframe['roundedCurrentRPM'], quadratic_func(sorted_zeroRemoved_combined_dataframe['roundedCurrentRPM'], *popt), label='Quadratic fit torque curve', color= 'red')
@@ -395,7 +395,7 @@ def altPowerCurvePlotter(carOrdinalID, numGears):
         plt.figure(figsize=(10, 6))
 
         #Plots normalized data in a scatter plot format to ensure the curve is close to intended dataset
-        plt.scatter(a[key]['roundedCurrentRPM'], a[key]['roundedTorque'], label='Data Points', color='blue')
+        plt.scatter(a[key]['roundedCurrentRPM'], a[key]['roundedTorque'], label='Power vs RPM plot', color='blue')
         plt.scatter(a[key]['roundedCurrentRPM'], a[key]['roundedPower'], label='Power vs RPM plot', color='orange')
 
         #Plots 
@@ -715,8 +715,7 @@ def processDataForTorqueVsSpeed(carOrdinalID, numGears):
                 intersection_points.append((x, y))
 
                 # Annotate intersection points with their coordinates
-                plt.annotate(f'({x:.2f}, {y:.2f})', (x, y), textcoords="offset points", xytext=(0,10), va='top', ha='center', fontsize=6, color='red')
-            
+                plt.annotate(f'Speed: {x:.2f}, Torque: {y:.2f}', (x, y), textcoords="offset points", xytext=(0,10), va='top', ha='center', fontsize=6, color='black')
             count += 1
         else:
             key = "sorted_combined_dataframe" + str(validGearData[count])
@@ -862,7 +861,7 @@ def processDataForRPMVsSpeed(carOrdinalID, numGears):
 '''Start main block to trigger methods and menu system'''
 
 #Define variables
-captureFile = os.path.join(os.getcwd(), "TelemDataFiles", "logTelemetry1.csv")
+captureFile = os.path.join(os.getcwd(), "TelemDataFiles", "logTelemetry2.csv")
 df = pd.read_csv(captureFile)
 gearCounter = 1
 
