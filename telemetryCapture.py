@@ -35,7 +35,7 @@ def createHeaderCSV(fileName):
 
 
 #Sets the path and file name for the logging file to be used
-fileName = os.getcwd() + "\\TelemDataFiles\\logTelemetry.csv"
+fileName = os.path.join(os.getcwd(), "TelemDataFiles", "logTelemetry.csv")
 
 file_path = os.path.join(os.getcwd(), "Core", "preferences.json")
 prefError = "false"
@@ -58,7 +58,7 @@ if os.path.exists(file_path):
             prefError = "true"
     f.close()
     if prefError != "true":
-        #Initializes DataPacket module for parsing data from FM7
+        #Initializes DataPacket module for parsing data from FM8
         dp = DataPacket(version=gameVersion)
 
         #Sets methods for checking to ensure file exists before asking archiving and cleaning questions
@@ -67,8 +67,7 @@ if os.path.exists(file_path):
             if next_question.lower() == "yes" or next_question.lower() == "y":
                 next_question = input("Did you analyze the data already?")
                 if next_question.lower() == "yes" or next_question.lower() == "y":
-                    captureFile = os.getcwd() + '\\TelemDataFiles\\logTelemetry2.csv'
-                    df = pd.read_csv(captureFile)
+                    df = pd.read_csv(fileName)
 
                     #Checks df for a carID within the file to use !!Warning this will break if more than one carID is present in the log file!!
                     if df['CarOrdinalID'].max() != None:
@@ -81,16 +80,16 @@ if os.path.exists(file_path):
                         newName = input("New name of the file? Note: .csv will be added if not included here")
                         if newName[-4:] != ".csv":
                             newName += ".csv"
-                            path = os.getcwd() + '\\TelemDataFiles\\' + str(carOrdinalID) + "\\"
-                            name = str(carOrdinalID) + "_" + newName
-                            df.to_csv(path + name, index=False)
+                            path = os.path.join(os.getcwd(), 'TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + "_" + newName)
+                            df.to_csv(path, index=False)
+                        else:
+                            path = os.path.join(os.getcwd(), 'TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + "_" + newName)
+                            df.to_csv(path, index=False)
                     else:
-                        path = os.getcwd() + '\\TelemDataFiles\\' + str(carOrdinalID) + "\\"
-                        name = str(carOrdinalID) + "_logTelemetry.csv"
-                        df.to_csv(path + name, index=False)
+                        path = os.path.join(os.getcwd(), 'TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + "_logTelemetry.csv")
+                        df.to_csv(path, index=False)
                 else:
-                    captureFile = os.getcwd() + '\\TelemDataFiles\\logTelemetry2.csv'
-                    df = pd.read_csv(captureFile)
+                    df = pd.read_csv(fileName)
 
                     #Checks df for a carID within the file to use !!Warning this will break if more than one carID is present in the log file!!
                     if df['CarOrdinalID'].max() != None:
@@ -105,13 +104,14 @@ if os.path.exists(file_path):
                         newName = input("New name of the file? Note: .csv will be added if not included here")
                         if newName[-4:] != ".csv":
                             newName += ".csv"
-                            path = os.getcwd() + '\\TelemDataFiles\\' + str(carOrdinalID) + "\\"
-                            name = str(carOrdinalID) + "_" + newName
-                            df.to_csv(path + name, index=False)
+                            path = os.path.join(os.getcwd(), 'TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + "_" + newName)
+                            df.to_csv(path, index=False)
+                        else:
+                            path = os.path.join(os.getcwd(), 'TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + "_" + newName)
+                            df.to_csv(path, index=False)
                     else:
-                        path = os.getcwd() + '\\TelemDataFiles\\' + str(carOrdinalID) + "\\"
-                        name = str(carOrdinalID) + "_logTelemetry.csv"
-                        df.to_csv(path + name, index=False)
+                        path = os.path.join(os.getcwd(), 'TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + "_logTelemetry.csv")
+                        df.to_csv(path, index=False)
             else:
                 print("Continuing and will append to existing file if it exists")
 

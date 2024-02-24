@@ -38,7 +38,7 @@ def search_csv(file_name, search_term):
 
 #Creates a folder in the telemDataFile folder for storage of telem data
 def createTelemDataFileDirectoryForCar(CarOrdinalID):
-    file_path = "E:\\Code Projects\\Forza_telemetry_project-develop\\Forza_telemetry_project-develop\\TelemDataFiles\\" + str(CarOrdinalID)
+    file_path = os.path.join(os.getcwd(), "TelemDataFiles", str(CarOrdinalID))
 
     if os.path.exists(file_path):
         print(f"Directory '{file_path}' found.")
@@ -222,17 +222,23 @@ def addNewCarByReadingTelemtry(file_name, telemPath):
                 CarOrdinalID,CarFriendlyName,CarMake,CarModel,CarManYear,CarClass,CarPerformanceIndex,DriveTrainType,NumCylinders,EngineMaxRPM,EngineIdleRPM,Gears,FinalDriveRatio,Ratio1,Ratio2,Ratio3,Ratio4,Ratio5,Ratio6,Ratio7,Ratio8,Ratio9,Ratio10,mphShiftPoint1,torqueShiftPoint1,rpmShiftPoint1,mphShiftPoint2,torqueShiftPoint2,rpmShiftPoint2,mphShiftPoint3, torqueShiftPoint3,rpmShiftPoint3,mphShiftPoint4,torqueShiftPoint4,rpmShiftPoint4,mphShiftPoint5,torqueShiftPoint5,rpmShiftPoint5,mphShiftPoint6,torqueShiftPoint6,rpmShiftPoint6, mphShiftPoint7,torqueShiftPoint7,rpmShiftPoint7,mphShiftPoint8,torqueShiftPoint8,rpmShiftPoint8,mphShiftPoint9,torqueShiftPoint9,rpmShiftPoint9,mphShiftPoint10,torqueShiftPoint10,rpmShiftPoint10,str(datetime.now())
             ]
 
-            # Writing to the CSV file
-            with open(file_name, mode='a', newline='') as file:
-                writer = csv.writer(file)
-                
-                # Write the data to the next available row
-                writer.writerow(data)
+            #Check to see if car is already in the db
+            df = pd.read_csv(file_name)
 
-                file.close
+            if CarOrdinalID in df['CarOrdinalID'].values:
+                print("Car Ordinal ID " + str(CarOrdinalID) + " already exists in the database.")
+            else:
+                # Writing to the CSV file
+                with open(file_name, mode='a', newline='') as file:
+                    writer = csv.writer(file)
+                    
+                    # Write the data to the next available row
+                    writer.writerow(data)
 
-            #Runs check to ensure telem folder is present and will do nothing if folder already exists
-            createTelemDataFileDirectoryForCar(CarOrdinalID)
+                    file.close
+
+                #Runs check to ensure telem folder is present and will do nothing if folder already exists
+                createTelemDataFileDirectoryForCar(CarOrdinalID)
         else:
             print("Telem data file not found.")
     else:
@@ -597,8 +603,8 @@ def updateCarShiftValuesViaTelemFiles(file_name,CarOrdinalID,shiftPointArray,val
 
 '''Starts block for triggering commands as needed'''
 #Defines file path and name
-file_name = os.getcwd() + "\\DBModule\\carDb2.csv"
-telemPath = os.getcwd() + "\\TelemDataFiles\\logTelemetry2.csv"
+file_name = os.path.join(os.getcwd(), "DBModule", "carDb2.csv")
+telemPath = os.path.join(os.getcwd(), "TelemDataFiles", "logTelemetry.csv")
 
 #Method for creating a new entry for a car that hasn't existed before by manual input
 #addNewCarByManualInputWithoutGearInfoInput(CarOrdinalID, file_name)

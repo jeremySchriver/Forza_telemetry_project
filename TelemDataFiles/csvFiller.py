@@ -62,7 +62,7 @@ def gearPullBuilder(numGears,captureFile,carOrdinalID):
     while count < numGears:
         gear = count+1
         #Sets file name for each gear in the car
-        fileName = "TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(gear) + "_data.csv"
+        fileName = os.path.join("TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_Gear_" + str(gear) + "_data.csv")
         createHeaderCSV(fileName)
         
         #grabs rows that match the gear supplied
@@ -123,23 +123,23 @@ def duplicateRPMNormalizer(fileName, gear, carOrdinalID):
     sorted_combined_dataframe = combined_dataframe.sort_values(by=['roundedCurrentRPM'])
 
     #Print results to file
-    newFileName = 'TelemDataFiles\\' + str(carOrdinalID) + "\\" + str(carOrdinalID) + '_combinedGear_' + str(gear) + '_data.csv'
+    newFileName = os.path.join('TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + '_combinedGear_' + str(gear) + '_data.csv')
     sorted_combined_dataframe.to_csv(newFileName, index=False)
 
 #Method to delete previous files for the car ID in question
 def deletePreviousData(numGears,carOrdinalID):
     count = 1
     while count <= numGears:
-        file_path = os.getcwd() + "\\TelemDataFiles\\" + str(carOrdinalID) + "\\"  + str(carOrdinalID) + "_Gear_" + str(count) + "_data.csv"
-        file_path1 = os.getcwd() + "\\TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_combinedGear_" + str(count) + "_data.csv"
-        file_path2 = os.getcwd() + "\\TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_firstPlot_Gear_" + str(count) + "_data.png"
-        file_path3 = os.getcwd() + "\\TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_secondPlot_Gear_" + str(count) + "_data.png"
-        file_path4 = os.getcwd() + "\\TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_combinedCurvedPlot_Gear_" + str(count) + "_data.png"
-        file_path5 = os.getcwd() + "\\TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(count) + "_PowerAndTorqueCurve.png"
-        file_path6 = os.getcwd() + "\\TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_TorquePerGearOverSpeed.png"
-        file_path7 = os.getcwd() + "\\TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_TorquePerGearOverSpeed_wIntersections.png"
-        file_path8 = os.getcwd() + "\\TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_RPMvSpeed.png"
-        file_path9 = os.getcwd() + "\\TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(count) + "_PowerAndTorqueCurve_Poly.png"
+        file_path = os.path.join(os.getcwd(), "TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_Gear_" + str(count) + "_data.csv")
+        file_path1 = os.path.join(os.getcwd(), "TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_combinedGear_" + str(count) + "_data.csv")
+        file_path2 = os.path.join(os.getcwd(), "TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_firstPlot_Gear_" + str(count) + "_data.png")
+        file_path3 = os.path.join(os.getcwd(), "TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_secondPlot_Gear_" + str(count) + "_data.png")
+        file_path4 = os.path.join(os.getcwd(), "TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_combinedCurvedPlot_Gear_" + str(count) + "_data.png")
+        file_path5 = os.path.join(os.getcwd(), "TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_Gear_" + str(count) + "_PowerAndTorqueCurve.png")
+        file_path6 = os.path.join(os.getcwd(), "TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_TorquePerGearOverSpeed.png")
+        file_path7 = os.path.join(os.getcwd(), "TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_TorquePerGearOverSpeed_wIntersections.png")
+        file_path8 = os.path.join(os.getcwd(), "TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_RPMvSpeed.png")
+        file_path9 = os.path.join(os.getcwd(), "TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_Gear_" + str(count) + "_PowerAndTorqueCurve_Poly.png")
         
         if os.path.exists(file_path):
             os.remove(file_path)
@@ -204,7 +204,7 @@ def deletePreviousData(numGears,carOrdinalID):
         count = count + 1
 
 #Method to build the torque and power v RPM curve files
-def powerCurvePlotter(fileName, EngineMaxRPM, currentGear, carOrdinalID):
+def powerCurvePlotter(fileName, currentGear, carOrdinalID):
     df = pd.read_csv(fileName)
 
     #Remove rows where torque values are 0
@@ -270,7 +270,7 @@ def powerCurvePlotter(fileName, EngineMaxRPM, currentGear, carOrdinalID):
     plt.grid(True)
 
     #Saves the image to a png file
-    plt.savefig("TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(currentGear) + "_PowerAndTorqueCurve.png", bbox_inches='tight')
+    plt.savefig(os.path.join("TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_Gear_" + str(currentGear) + "_PowerAndTorqueCurve.png"), bbox_inches='tight')
 
 #New method to build the torque and power vs RPM curve files. New method uses polynomial curving and a different run book of data normalization before plotting
 def altPowerCurvePlotter(carOrdinalID, numGears):
@@ -278,7 +278,7 @@ def altPowerCurvePlotter(carOrdinalID, numGears):
     count = 1
     while count <= numGears:
         key = "df" + str(count)
-        path = 'TelemDataFiles\\' + str(carOrdinalID) + "\\" + str(carOrdinalID) + '_Gear_' + str(count) + '_data.csv'
+        path = os.path.join('TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + '_Gear_' + str(count) + '_data.csv')
         value = pd.read_csv(path)
 
         a[key] = value
@@ -420,7 +420,7 @@ def altPowerCurvePlotter(carOrdinalID, numGears):
         plt.grid(True)
 
         # Save the plot
-        plt.savefig("TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(count) + "_PowerAndTorqueCurve_Poly.png", bbox_inches='tight')
+        plt.savefig(os.path.join("TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_Gear_" + str(count) + "_PowerAndTorqueCurve_Poly.png"), bbox_inches='tight')
         plt.clf()  # Clear the plot for the next iteration
 
         count += 1
@@ -433,7 +433,7 @@ def processDataForTorqueVsSpeed(carOrdinalID, numGears):
     #Sets all available combinedGear files, for this carID, into unique dataframes
     while count <= numGears:
         key = "df" + str(count)
-        path = "TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + '_combinedGear_' + str(count) + '_data.csv'
+        path = os.path.join("TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + '_combinedGear_' + str(count) + '_data.csv')
         value = pd.read_csv(path)
 
         a[key] = value
@@ -677,7 +677,7 @@ def processDataForTorqueVsSpeed(carOrdinalID, numGears):
     plt.title('Torque vs Speed Curve Per Gear wo/Intersection Points')
     plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
     plt.grid(True)
-    plt.savefig("TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_TorquePerGearOverSpeed.png", bbox_inches='tight')
+    plt.savefig(os.path.join("TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_TorquePerGearOverSpeed.png"), bbox_inches='tight')
 
     #Clears the current plot
     plt.clf()
@@ -734,7 +734,7 @@ def processDataForTorqueVsSpeed(carOrdinalID, numGears):
     plt.title('Torque vs Speed Curve Per Gear w/Intersection Points')
     plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
     plt.grid(True)
-    plt.savefig("TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_TorquePerGearOverSpeed_wIntersections.png", bbox_inches='tight')
+    plt.savefig(os.path.join("TelemDataFiles", str(carOrdinalID),  str(carOrdinalID) + "_TorquePerGearOverSpeed_wIntersections.png"), bbox_inches='tight')
 
     #Clears the current plot
     plt.clf()
@@ -771,7 +771,7 @@ def processDataForRPMVsSpeed(carOrdinalID, numGears):
     #Grab relevant files and push them into data frames under the dictionary a
     while count <= numGears:
         key = "df" + str(count)
-        path = 'TelemDataFiles\\' + str(carOrdinalID) + "\\" + str(carOrdinalID) + '_combinedGear_' + str(count) + '_data.csv'
+        path = os.path.join('TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + '_combinedGear_' + str(count) + '_data.csv')
         value = pd.read_csv(path)
 
         a[key] = value
@@ -854,7 +854,7 @@ def processDataForRPMVsSpeed(carOrdinalID, numGears):
     plt.title('Engine RPM vs Speed for Each Gear')
     plt.grid(True)
     plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
-    plt.savefig("TelemDataFiles\\"+ str(carOrdinalID) + "\\" + str(carOrdinalID) + "_RPMvSpeed.png", bbox_inches='tight')
+    plt.savefig(os.path.join("TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_RPMvSpeed.png"), bbox_inches='tight')
     #plt.show()
     #Clears the current plot
     plt.clf()
@@ -862,7 +862,7 @@ def processDataForRPMVsSpeed(carOrdinalID, numGears):
 '''Start main block to trigger methods and menu system'''
 
 #Define variables
-captureFile = os.getcwd() + '\\TelemDataFiles\\logTelemetry2.csv'
+captureFile = os.getcwd() + '\\TelemDataFiles\\logTelemetry.csv'
 df = pd.read_csv(captureFile)
 gearCounter = 1
 
@@ -902,7 +902,7 @@ if user_input.lower() == "yes" or user_input.lower() == "y" or user_input.lower(
             #itterates through the created gear files to build new copies with normalized and sorted data
             while gearCounter <= numGears:
                 #fileName = "TelemDataFiles\Gear_" + str(gearCounter) + "_data.csv"
-                fileName = "TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(gearCounter) + "_data.csv"
+                fileName = os.path.join("TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_Gear_" + str(gearCounter) + "_data.csv")
                 duplicateRPMNormalizer(fileName, gearCounter,carOrdinalID)
                 powerCurvePlotter(fileName, df.EngineMaxRPM.max(), gearCounter, carOrdinalID)
                 gearCounter = gearCounter + 1
@@ -925,8 +925,7 @@ if user_input.lower() == "yes" or user_input.lower() == "y" or user_input.lower(
 
                 #itterates through the created gear files to build new copies with normalized and sorted data
                 while gearCounter <= numGears:
-                    #fileName = "TelemDataFiles\Gear_" + str(gearCounter) + "_data.csv"
-                    fileName = "TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(gearCounter) + "_data.csv"
+                    fileName = os.path.join("TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_Gear_" + str(gearCounter) + "_data.csv")
                     duplicateRPMNormalizer(fileName, gearCounter,carOrdinalID)
                     powerCurvePlotter(fileName, df.EngineMaxRPM.max(), gearCounter, carOrdinalID)
                     gearCounter = gearCounter + 1
@@ -943,8 +942,7 @@ if user_input.lower() == "yes" or user_input.lower() == "y" or user_input.lower(
 
                 #itterates through the created gear files to build new copies with normalized and sorted data
                 while gearCounter <= numGears:
-                    #fileName = "TelemDataFiles\Gear_" + str(gearCounter) + "_data.csv"
-                    fileName = "TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(gearCounter) + "_data.csv"
+                    fileName = os.path.join("TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_Gear_" + str(gearCounter) + "_data.csv")
                     duplicateRPMNormalizer(fileName, gearCounter, carOrdinalID)
                     powerCurvePlotter(fileName, df.EngineMaxRPM.max(), gearCounter, carOrdinalID)
                     gearCounter = gearCounter + 1
@@ -961,8 +959,7 @@ if user_input.lower() == "yes" or user_input.lower() == "y" or user_input.lower(
 
         #itterates through the created gear files to build new copies with normalized and sorted data
         while gearCounter <= numGears:
-            #fileName = "TelemDataFiles\Gear_" + str(gearCounter) + "_data.csv"
-            fileName = "TelemDataFiles\\" + str(carOrdinalID) + "\\"  + str(carOrdinalID) + "_Gear_" + str(gearCounter) + "_data.csv"
+            fileName = os.path.join("TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_Gear_" + str(gearCounter) + "_data.csv")
             duplicateRPMNormalizer(fileName, gearCounter, carOrdinalID)
             powerCurvePlotter(fileName, df.EngineMaxRPM.max(), gearCounter, carOrdinalID)
             gearCounter = gearCounter + 1
@@ -980,8 +977,7 @@ elif user_input.lower() == "no" or user_input.lower() == "n":
 
     #itterates through the created gear files to build new copies with normalized and sorted data
     while gearCounter <= numGears:
-        #fileName = "TelemDataFiles\Gear_" + str(gearCounter) + "_data.csv"
-        fileName = "TelemDataFiles\\" + str(carOrdinalID) + "\\" + str(carOrdinalID) + "_Gear_" + str(gearCounter) + "_data.csv"
+        fileName = os.path.join("TelemDataFiles", str(carOrdinalID), str(carOrdinalID) + "_Gear_" + str(gearCounter) + "_data.csv")
         duplicateRPMNormalizer(fileName, gearCounter, carOrdinalID)
         powerCurvePlotter(fileName, df.EngineMaxRPM.max(), gearCounter, carOrdinalID)
         gearCounter = gearCounter + 1
