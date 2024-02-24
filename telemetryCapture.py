@@ -33,6 +33,29 @@ def createHeaderCSV(fileName):
     else:
         print(f"CSV file '{fileName}' already exists.")
 
+def archiveLogFile(df):
+    #Checks df for a carID within the file to use !!Warning this will break if more than one carID is present in the log file!!
+    if df['CarOrdinalID'].max() != None:
+        carOrdinalID = df['CarOrdinalID'].max()
+    else:
+        carOrdinalID = input("What is the carOrdinalID for the car?")
+
+    createTelemDataFileDirectoryForCar(carOrdinalID)
+
+    next_question = input("Did you want to rename the file? Note: New file name would already be named " + str(carOrdinalID) + "_logTelemetry.csv and would be placed in its respective TelemDataFiles directory")
+    if next_question.lower() == "yes" or next_question.lower() == "y":
+        newName = input("New name of the file? Note: .csv will be added if not included here")
+        if newName[-4:] != ".csv":
+            newName += ".csv"
+            path = os.path.join(os.getcwd(), 'TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + "_" + newName)
+            df.to_csv(path, index=False)
+        else:
+            path = os.path.join(os.getcwd(), 'TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + "_" + newName)
+            df.to_csv(path, index=False)
+    else:
+        path = os.path.join(os.getcwd(), 'TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + "_logTelemetry.csv")
+        df.to_csv(path, index=False)
+
 
 #Sets the path and file name for the logging file to be used
 fileName = os.path.join(os.getcwd(), "TelemDataFiles", "logTelemetry.csv")
@@ -63,69 +86,36 @@ if os.path.exists(file_path):
 
         #Sets methods for checking to ensure file exists before asking archiving and cleaning questions
         if os.path.exists(fileName):
-            next_question = input("Would you like to archive the previous log file?")
-            if next_question.lower() == "yes" or next_question.lower() == "y":
-                next_question = input("Did you analyze the data already?")
+            df = pd.read_csv(fileName)
+            dfSize = len(df)
+
+            #If check to confirm data exists in the log file before asking archive questions
+            if dfSize > 0:
+                next_question = input("Would you like to archive the previous log file?")
                 if next_question.lower() == "yes" or next_question.lower() == "y":
-                    df = pd.read_csv(fileName)
-
-                    #Checks df for a carID within the file to use !!Warning this will break if more than one carID is present in the log file!!
-                    if df['CarOrdinalID'].max() != None:
-                        carOrdinalID = df['CarOrdinalID'].max()
-                    else:
-                        carOrdinalID = input("What is the carOrdinalID for the car?")
-
-                    next_question = input("Did you want to rename the file? Note: New file name would already be named " + str(carOrdinalID) + "_logTelemetry.csv and would be placed in its respective TelemDataFiles directory")
+                    next_question = input("Did you analyze the data already?")
                     if next_question.lower() == "yes" or next_question.lower() == "y":
-                        newName = input("New name of the file? Note: .csv will be added if not included here")
-                        if newName[-4:] != ".csv":
-                            newName += ".csv"
-                            path = os.path.join(os.getcwd(), 'TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + "_" + newName)
-                            df.to_csv(path, index=False)
-                        else:
-                            path = os.path.join(os.getcwd(), 'TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + "_" + newName)
-                            df.to_csv(path, index=False)
+                        archiveLogFile(df)
                     else:
-                        path = os.path.join(os.getcwd(), 'TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + "_logTelemetry.csv")
-                        df.to_csv(path, index=False)
+                        archiveLogFile(df)
                 else:
-                    df = pd.read_csv(fileName)
+                    print("Continuing and will append to existing file.")
 
-                    #Checks df for a carID within the file to use !!Warning this will break if more than one carID is present in the log file!!
-                    if df['CarOrdinalID'].max() != None:
-                        carOrdinalID = df['CarOrdinalID'].max()
-                        print(carOrdinalID)
+                print("It is recommended you clean the log file before proceeding, unless this is the same car and has the same performance index.")
+                next_question = input("Would you like to clean the log?")
+
+                if next_question.lower() == "yes" or next_question.lower() == "y":
+                    if os.path.exists(fileName):
+                        os.remove(fileName)
+                        print(f"File '{fileName}' deleted successfully.")
                     else:
-                        carOrdinalID = input("What is the carOrdinalID for the car?")
-                    createTelemDataFileDirectoryForCar(carOrdinalID)
-
-                    next_question = input("Did you want to rename the file? Note: New file name would already be named " + str(carOrdinalID) + "_logTelemetry.csv and would be placed in its respective TelemDataFiles directory")
-                    if next_question.lower() == "yes" or next_question.lower() == "y":
-                        newName = input("New name of the file? Note: .csv will be added if not included here")
-                        if newName[-4:] != ".csv":
-                            newName += ".csv"
-                            path = os.path.join(os.getcwd(), 'TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + "_" + newName)
-                            df.to_csv(path, index=False)
-                        else:
-                            path = os.path.join(os.getcwd(), 'TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + "_" + newName)
-                            df.to_csv(path, index=False)
-                    else:
-                        path = os.path.join(os.getcwd(), 'TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + "_logTelemetry.csv")
-                        df.to_csv(path, index=False)
-            else:
-                print("Continuing and will append to existing file if it exists")
-
-            print("It is recommended you clean the log file before proceeding, unless this is the same car and has the same performance index.")
-            next_question = input("Would you like to clean the log?")
-
-            if next_question.lower() == "yes" or next_question.lower() == "y":
-                if os.path.exists(fileName):
-                    os.remove(fileName)
-                    print(f"File '{fileName}' deleted successfully.")
+                        print(f"File '{fileName}' does not exist.")
                 else:
-                    print(f"File '{fileName}' does not exist.")
+                    print("Continuing and will append to existing file.")
             else:
-                print("Continuing and will append to existing file if it exists")
+                print("Clean log file already found.")
+        else:
+            print("Log file not found.")
 
         #Runs the method to create the file with headers, if file is missing
         createHeaderCSV(fileName)

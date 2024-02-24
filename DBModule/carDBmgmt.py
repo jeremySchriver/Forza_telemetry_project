@@ -610,7 +610,7 @@ telemPath = os.path.join(os.getcwd(), "TelemDataFiles", "logTelemetry.csv")
 #addNewCarByManualInputWithoutGearInfoInput(CarOrdinalID, file_name)
 
 #Method for creating a new entry for a car that hasn't existed before by pulling data from logTelemtry
-addNewCarByReadingTelemtry(file_name, telemPath)
+#addNewCarByReadingTelemtry(file_name, telemPath)
 
 #Method for updating all values on an existing car
 #def updateCarAllValuesManually(CarOrdinalID, file_name)
