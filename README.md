@@ -19,8 +19,8 @@ Setup
 Telemetry Capture Data To CSV:
     -Run telemetryCapture.py in terminal
 
-Adding car information to the database:
-    -Run carDBAdd.py in terminal
+Adding/modifying car information to/in the database:
+    -Run carDBmgmt.py in terminal
 
 Normalize and graph captured data:
     -Run csvFiller.py in terminal and follow prompts with yes/no answers
