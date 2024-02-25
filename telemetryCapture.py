@@ -38,13 +38,13 @@ def archiveLogFile(df):
     if df['CarOrdinalID'].max() != None:
         carOrdinalID = df['CarOrdinalID'].max()
     else:
-        carOrdinalID = input("What is the carOrdinalID for the car?")
+        carOrdinalID = input("What is the carOrdinalID for the car? ")
 
     createTelemDataFileDirectoryForCar(carOrdinalID)
 
-    next_question = input("Did you want to rename the file? Note: New file name would already be named " + str(carOrdinalID) + "_logTelemetry.csv and would be placed in its respective TelemDataFiles directory")
+    next_question = input("Did you want to rename the file? Note: New file name would already be named " + str(carOrdinalID) + "_logTelemetry.csv and would be placed in its respective TelemDataFiles directory. ")
     if next_question.lower() == "yes" or next_question.lower() == "y":
-        newName = input("New name of the file? Note: .csv will be added if not included here")
+        newName = input("New name of the file? Note: .csv will be added if not included here. ")
         if newName[-4:] != ".csv":
             newName += ".csv"
             path = os.path.join(os.getcwd(), 'TelemDataFiles', str(carOrdinalID), str(carOrdinalID) + "_" + newName)
@@ -91,9 +91,9 @@ if os.path.exists(file_path):
 
             #If check to confirm data exists in the log file before asking archive questions
             if dfSize > 0:
-                next_question = input("Would you like to archive the previous log file?")
+                next_question = input("Would you like to archive the previous log file? ")
                 if next_question.lower() == "yes" or next_question.lower() == "y":
-                    next_question = input("Did you analyze the data already?")
+                    next_question = input("Did you analyze the data already? ")
                     if next_question.lower() == "yes" or next_question.lower() == "y":
                         archiveLogFile(df)
                     else:
@@ -102,7 +102,7 @@ if os.path.exists(file_path):
                     print("Continuing and will append to existing file.")
 
                 print("It is recommended you clean the log file before proceeding, unless this is the same car and has the same performance index.")
-                next_question = input("Would you like to clean the log?")
+                next_question = input("Would you like to clean the log? ")
 
                 if next_question.lower() == "yes" or next_question.lower() == "y":
                     if os.path.exists(fileName):
